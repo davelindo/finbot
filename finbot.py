@@ -1,6 +1,8 @@
 import os
 import time
+import re 
 from slackclient import SlackClient
+from api import Source
 
 # Bot ID from environment variable
 BOT_ID = os.environ.get("BOT_ID")
@@ -13,6 +15,11 @@ EXAMPLE_COMMAND = "do"
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
 
+MESSAGE_PATTERNS = {
+	'alpha' : r'^[a-z A-Z]*$'
+}
+
+
 
 class Finbot: 
 
@@ -20,7 +27,6 @@ class Finbot:
 	def get_output(rtm_output):
 		if rtm_output and len(rtm_output) > 0:
 			for output in rtm_output:
-				print(output)
 				# if output and 'text' in output and AT_BOT in output['text']:
 				if output and 'text' in output and 'user_profile' not in output:
 					# print(output)
@@ -32,8 +38,10 @@ class Finbot:
 	@staticmethod
 	def handle_output(output):
 		message, channel = output['text'], output['channel']
-		# if command.startswith(EXAMPLE_COMMAND):
-		
+		if message.startswith('$'):
+			ticker = message[1:]
+			message = Source.last_price(ticker)
+
 		response = "I can't respond to that right now but I will have more functionality later."
 		slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
