@@ -1,7 +1,8 @@
+from slackclient import SlackClient
 import os
 import time
 import re 
-from slackclient import SlackClient
+import random
 from api import Source
 
 # Bot ID from environment variable
@@ -9,7 +10,7 @@ BOT_ID = os.environ.get("BOT_ID")
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-EXAMPLE_COMMAND = "do"
+FINBOT_ON = True
 
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
@@ -19,6 +20,20 @@ patterns = {
 	'tag' : r'^\$',
 	'ticker' : r'^[A-Z]*$'
 }
+
+COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close']
+FLAGS = {
+	'dvol': [re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'), 
+			re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')]
+}
+
+ON_MESSAGES = [
+"Ready!",
+"Finbot is now ON.",
+"How can I help?",
+]
+
+# Regex for Tvol: "tvol XXXX" with # of days (>7)
 
 
 
@@ -37,42 +52,70 @@ class Finbot:
 		return None
 
 	@staticmethod
+	def bot_status(raw_text, channel): 
+		global FINBOT_ON
+
+		if raw_text.lower() == "finbot on": 
+			FINBOT_ON = True
+			message = random.choice(ON_MESSAGES)
+			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+			return True
+
+		elif FINBOT_ON == False: 
+			return True
+
+		elif raw_text.lower() == "finbot off":
+			FINBOT_ON = False
+			message = "Going to sleep..."
+			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+			return True
+		else: 
+			return False
+
+
+	@staticmethod
 	def handle_output(output):
-		message, channel = output['text'], output['channel']
+		raw_text, channel = output['text'], output['channel']
+		if Finbot.bot_status(raw_text, channel): 
+			return None
 
-
-		#Check for $ calls -  find tags
 		queries = []
-		tags = [string.start() for string in re.finditer('\$', message)]
+		tags = [string.start() for string in re.finditer('\$', raw_text)] # Find $ tags
 
 		if tags: 
 			num_queries = len(tags)
 			if num_queries > 1: 
-				for each in tags[:(num_queries-1)]: 
+				for each in tags[:(num_queries-1)]:
 					idx = tags.index(each)
-					queries.append(message[each:tags[(idx+1)]])
-					# append last item
-				queries.append(message[(tags[num_queries-1]):])
-			else: 
-				queries.append(message)
+					queries.append(raw_text[each:tags[(idx+1)]]) # append each tag
+				queries.append(raw_text[(tags[num_queries-1]):]) # append last tag
 
-		for each in queries: 
-			print(each)
-		# Test again  -- this part is working and is finding every instance of $----- 
+			else: 
+				queries.append(raw_text)
 
 		if len(queries) > 4: 
 			warning = "Take it easy! I can only handle a few requests at a time."
 			slack_client.api_call("chat.postMessage", channel=channel, text=warning, as_user=True)
+			queries = queries[0:4]
+
+		for each in queries: 
+			components = each.lstrip('$').split(' ')
+			if len(components)>1:
+				operations = list(set(COMMANDS).intersection(components[1:]))
+				print("OPERATIONS", operations)
+				# edit "operations=" line and add [0] at the end - only take one operation per query
+				# for each operation, match the other elements of 'components' to the FLAGS variable to get
+				# specifics for the operation to be performed 
+				ticker = components[0]
+				message = Source.last_price(ticker)
+			else: 
+				ticker = components[0]
+				message = Source.last_price(ticker)
 
 
 
 
-		if message.startswith('$') or message.startswith(AT_BOT + " $"):
-			# body = message.lstrip('$')
-			ticker = message[1:]
-			message = Source.last_price(ticker)
-
-		elif message.startswith(AT_BOT):
+		if raw_text.startswith(AT_BOT):
 			message = "You talking to me?"
 
 		slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
