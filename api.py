@@ -19,12 +19,14 @@ class Source:
 	@staticmethod
 	def last_price(ticker): 
 		price = Share(ticker).get_price()
+		if not price: 
+			return "No result found for '{}'".format(ticker)
 		trade_datetime = Share(ticker).get_trade_datetime().split(' ')
 		month, day = calendar.month_name[int(trade_datetime[0][5:7].lstrip('0'))], trade_datetime[0][8:10].lstrip('0')
 		trade_time = trade_datetime[1] + " UTC+0"
 		response = "{} Last Price: {} ({} {} @ {})".format(ticker, price, month, day, trade_time)
 		return response
-
+ 
 	# @staticmethod
 	# def historical_range(ticker, start=None, end=None): 
 	# 	return Share(ticker).get_historical('')
