@@ -10,6 +10,7 @@ BOT_ID = os.environ.get("BOT_ID")
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
+AT_BOT_2 = "<@" + BOT_ID + ">:"
 FINBOT_ON = True
 
 # instantiate Slack client
@@ -17,14 +18,15 @@ slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
 
 patterns = {
-	'tag' : r'^\$',
-	'ticker' : r'^[A-Z]*$'
+	'ticker' : re.compile(r'^[A-Z]*$')
 }
 
-COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close']
+COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
 FLAGS = {
 	'dvol': [re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'), 
-			re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')]
+			re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')], 
+	'-g': ['1d', '5d', '1M', '3M', '6M', 'YTD', '1Y', '2Y', '5Y'], 
+
 }
 
 ON_MESSAGES = [
@@ -41,18 +43,21 @@ class Finbot:
 
 	@staticmethod
 	def get_output(rtm_output):
+		"""
+		Determines whether Finbot needs to process the output.
+		"""
 		if rtm_output and len(rtm_output) > 0:
 			for output in rtm_output:
-				# if output and 'text' in output and AT_BOT in output['text']:
 				if output and 'text' in output and 'user_profile' not in output:
-					# print(output)
-					# return output['text'].split(AT_BOT)[1].strip().lower(), output['channel']
-					# return output['text'], output['channel']
 					Finbot.handle_output(output)
 		return None
 
 	@staticmethod
 	def bot_status(raw_text, channel): 
+		"""
+		Returns True when Bot shouldn't perform any further handling of the output, 
+		either because the bot is turned off or because the user was turning the bot on/off.
+		"""
 		global FINBOT_ON
 
 		if raw_text.lower() == "finbot on": 
@@ -75,55 +80,65 @@ class Finbot:
 
 	@staticmethod
 	def handle_output(output):
+		"""
+		Parses a user message for processable queries (up to 5 per message). 
+		Finbot uses the '$' sign to tag symbols for processing. 
+		"""
 		raw_text, channel = output['text'], output['channel']
 		if Finbot.bot_status(raw_text, channel): 
 			return None
 
 		queries = []
-		tags = [string.start() for string in re.finditer('\$', raw_text)] # Find $ tags
+		if raw_text.startswith('$'):
+			queries = raw_text.split('$')
+			queries.remove('')
+			for each in queries: 
+				each.strip()
+				each.lstrip('$')
+		else: 
+			return None
 
-		if tags: 
-			num_queries = len(tags)
-			if num_queries > 1: 
-				for each in tags[:(num_queries-1)]:
-					idx = tags.index(each)
-					queries.append(raw_text[each:tags[(idx+1)]]) # append each tag
-				queries.append(raw_text[(tags[num_queries-1]):]) # append last tag
-
-			else: 
-				queries.append(raw_text)
-
-		if len(queries) > 4: 
+		if len(queries) > 5: 
 			warning = "Take it easy! I can only handle a few requests at a time."
 			slack_client.api_call("chat.postMessage", channel=channel, text=warning, as_user=True)
-			queries = queries[0:4]
+			queries = queries[0:5]
 
 		for each in queries: 
-			components = each.lstrip('$').split(' ')
-			if len(components)>1:
-				operations = list(set(COMMANDS).intersection(components[1:]))
-				print("OPERATIONS", operations)
-				# edit "operations=" line and add [0] at the end - only take one operation per query
-				# for each operation, match the other elements of 'components' to the FLAGS variable to get
-				# specifics for the operation to be performed 
-				ticker = components[0]
-				message = Source.last_price(ticker)
-			else: 
-				ticker = components[0]
-				message = Source.last_price(ticker)
-
-
-
-
-		if raw_text.startswith(AT_BOT):
-			message = "You talking to me?"
-
-		slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
-
+			Finbot.respond(each, channel)
 
 	@staticmethod
-	def respond(queries):
-		pass
+	def respond(query, channel):
+		components = query.split(' ')
+		if '' in components: 
+			components.remove('')
+		print(components)
+		ticker = components[0]
+		if len(components)>1:
+			command = list(set(COMMANDS).intersection(components[1:]))
+			if not command: 
+				message = "I couldn't understand your request for ticker '{}'.".format(ticker)
+				return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+			command = command[0]
+
+			flag = None
+			command_flags = FLAGS.get(command)
+			if command_flags: 
+				flag = list(set(command_flags).intersection(components[1:]))
+			if flag: 
+				flag = flag[0]
+
+
+			print("COMMAND", command)
+			print("FLAG", flag)
+			# edit "command=" line and add [0] at the end - only take one operation per query
+			# for each operation, match the other elements of 'components' to the FLAGS variable to get
+			# specifics for the operation to be performed 
+			message = Source.last_price(ticker)
+			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+		else: 
+			# ticker = components[0]
+			message = Source.last_price(ticker)
+			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
 		"""
 		Move all responding functionality from handle_output to here. 

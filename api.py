@@ -1,6 +1,7 @@
 import quandl as ql
 import pandas as pd
-import numpy as np 
+from pandas import np
+from pandas_datareader import data
 import datetime
 import time
 import calendar
@@ -24,10 +25,43 @@ class Source:
 		trade_datetime = Share(ticker).get_trade_datetime().split(' ')
 		month, day = calendar.month_name[int(trade_datetime[0][5:7].lstrip('0'))], trade_datetime[0][8:10].lstrip('0')
 		trade_time = trade_datetime[1] + " UTC+0"
-		response = "{} Last Price: {} ({} {} @ {})".format(ticker, price, month, day, trade_time)
+		response = "*{} Last Price:* {} ({} {} @ {})".format(ticker.upper(), price, month, day, trade_time)
 		return response
  
 	# @staticmethod
 	# def historical_range(ticker, start=None, end=None): 
 	# 	return Share(ticker).get_historical('')
+
+
+	# Trailing Volatility: Allow up to 1500 days
+	@staticmethod
+	def trailing_volatility(ticker, days):
+		try:
+			quotes = data.DataReader(ticker, 'google')['Close'][-days:]
+		except Exception:
+			return False 
+		logreturns = np.log(quotes / quotes.shift(1))
+		return round(np.sqrt(252*logreturns.var()), 5)
+
+	@staticmethod
+	def range_volatility(ticker, start, end):
+		try:
+			quotes = data.DataReader(ticker, 'google')['Close'].loc[start:end]
+		except Exception:
+			print("Error getting data for symbol '{}'.".format(ticker))
+			return False 
+		logreturns = np.log(quotes / quotes.shift(1))
+		return np.sqrt(252*logreturns.var())
+
+
+
+
+
+
+
+
+
+
+
+
 
