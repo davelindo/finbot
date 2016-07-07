@@ -3,7 +3,7 @@ import os
 import time
 import re 
 import random
-from api import Source
+from api import OPERATIONS
 
 # Bot ID from environment variable
 BOT_ID = os.environ.get("BOT_ID")
@@ -17,15 +17,29 @@ FINBOT_ON = True
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
 
-patterns = {
-	'ticker' : re.compile(r'^[A-Z]*$')
-}
+# patterns = {
+# 	'ticker' : re.compile(r'^[A-Z]*$')
+# }
 
 COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
-FLAGS = {
-	'dvol': [re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'), 
-			re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')], 
-	'-g': ['1d', '5d', '1M', '3M', '6M', 'YTD', '1Y', '2Y', '5Y'], 
+
+
+
+PATTERNS = {
+
+	'dvol': {
+		"type": "REGEX",
+		"patterns": [re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'), 
+					re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')]
+			}, 
+	'tvol': {
+		"type": "REGEX",
+		"patterns": []
+	},
+	'-g': {
+		"type": "FLAG",
+		"patterns": ['1d', '5d', '1M', '3M', '6M', 'YTD', '1Y', '2Y', '5Y']
+	},
 
 }
 
@@ -49,7 +63,7 @@ class Finbot:
 		if rtm_output and len(rtm_output) > 0:
 			for output in rtm_output:
 				if output and 'text' in output and 'user_profile' not in output:
-					Finbot.handle_output(output)
+					Finbot.filter_output(output)
 		return None
 
 	@staticmethod
@@ -79,7 +93,7 @@ class Finbot:
 
 
 	@staticmethod
-	def handle_output(output):
+	def filter_output(output):
 		"""
 		Parses a user message for processable queries (up to 5 per message). 
 		Finbot uses the '$' sign to tag symbols for processing. 
@@ -104,10 +118,15 @@ class Finbot:
 			queries = queries[0:5]
 
 		for each in queries: 
-			Finbot.respond(each, channel)
+			Finbot.process_request(each, channel)
+
 
 	@staticmethod
-	def respond(query, channel):
+	def process_request(query, channel):
+		"""
+		Each user query is forwarded to the appropriate function based on the command in the query.
+		Once the query has been processed, the resulting response is sent as a message to the channel. 
+		"""
 		components = query.split(' ')
 		if '' in components: 
 			components.remove('')
@@ -118,42 +137,70 @@ class Finbot:
 			if not command: 
 				message = "I couldn't understand your request for ticker '{}'.".format(ticker)
 				return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
-			command = command[0]
-
-			flag = None
-			command_flags = FLAGS.get(command)
-			if command_flags: 
-				flag = list(set(command_flags).intersection(components[1:]))
-			if flag: 
-				flag = flag[0]
+			components = components[2:]
+			message = OPERATIONS[command[0]](ticker, components)
+			return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+		# If no commands specified, default is to get last price
+		message = OPERATIONS["last_price"](ticker)
+		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
 
-			print("COMMAND", command)
-			print("FLAG", flag)
-			# edit "command=" line and add [0] at the end - only take one operation per query
-			# for each operation, match the other elements of 'components' to the FLAGS variable to get
-			# specifics for the operation to be performed 
-			message = Source.last_price(ticker)
-			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
-		else: 
-			# ticker = components[0]
-			message = Source.last_price(ticker)
-			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+
 
 		"""
-		Move all responding functionality from handle_output to here. 
-		Get_output will decide if activity in the channel needs to be handled by Finbot. If yes, it proceeds to handle_output. 
-		Handle_output will sort all the text and send all relevant information to the respond method. 
+		REFACTOR
 
-		This will include an array of queries (things tagged with $). It will also be able to respond in some basic ways if the 
+
+
+
+		Once you have a command, call the function in api.py. Use the OPERATIONS variable
+		(imported) to locate the function by its key (same as the command used) and call it. 
+
+		Each function in API.py needs to receive both the ticker and the message. 
+		Because every function will have to look for different flags or Regex, 
+		all parsing at that level will happen within the functions at API.py. 
+
+		This removes the need for an overcomplicated solution that handles every method - complex
+		methods will have custom complex parsing, simpler methods won't. 
+
+		A views file should also be created to store all the responses to the user so they do not 
+		clutter api.py. They should be stored in a View class with a ton of static methods, with each being
+		a response to the user. The methods should be named with their respective commands, eg: 'tvol_err1'
+		Random choice responses (like on bot startup) can also become views functions here.
+
+		- process_request needs to be renamed. 
+
+
+
+
+
+
+
+		"""
+
+		# Trim a list of flags and select the first, or only find one and throw error if multiple flags are present? 
+		# Same with commands = throw error if multiple commands are present for the same $ tag? 
+		# New file, or new method that takes ticker, command, flag and determines which API methods run? 
+		# New file for Views for better MVC-like architecture -- 
+		#	big dictionary of possible messages (abbreviated key, full message value)?
+
+		# message = Source.last_price(ticker)
+		# slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+
+		"""
+		Move all process_requesting functionality from filter_output to here. 
+		Get_output will decide if activity in the channel needs to be handled by Finbot. If yes, it proceeds to filter_output. 
+		filter_output will sort all the text and send all relevant information to the process_request method. 
+
+		This will include an array of queries (things tagged with $). It will also be able to process_request in some basic ways if the 
 		user @s Finbot without using any tags - providing basic guidance and shooting the shit. 
 
-		the handle_output method will also need to retrieve and pass along any relevant user info - the user's username, real name, ID, 
+		the filter_output method will also need to retrieve and pass along any relevant user info - the user's username, real name, ID, 
 		etc - for addressing the person with its response as well as being able to tag the user that called the bot. 
 
 		++ Add a set of commands for Bot Settings. These should begin by tagging finbot. 
 		@finbot tag on - Default. Finbot will tag the user that called it when it replies. if a user sends this message, 
-		Finbot will respond saying "Tagging ON" or "Tagging OFF" if someone enters '@finbot tag off'.
+		Finbot will process_request saying "Tagging ON" or "Tagging OFF" if someone enters '@finbot tag off'.
 
 
 
