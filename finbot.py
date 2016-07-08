@@ -21,7 +21,9 @@ slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 # 	'ticker' : re.compile(r'^[A-Z]*$')
 # }
 
-COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
+# COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
+COMMANDS = ['tvol', 'rvol']
+
 
 
 
@@ -130,7 +132,8 @@ class Finbot:
 		components = query.split(' ')
 		if '' in components: 
 			components.remove('')
-		print(components)
+		# print(components) -- ticker, comamnd, flag
+		# print(components[2:]) - flag onlyss
 		ticker = components[0]
 		if len(components)>1:
 			command = list(set(COMMANDS).intersection(components[1:]))

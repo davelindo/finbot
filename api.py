@@ -11,6 +11,12 @@ import re
 from response import Response
 
 
+patterns = {
+	"tvol": re.compile(r'^([1-9][0-9]|[1-9][0-9][0-9]|[1-1][0-4][0-9][0-9]|1500)$'),
+	"rvol": [re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'), 
+			re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')],
+}
+
 
 
 
@@ -36,27 +42,37 @@ def last_price(ticker):
 # 	return Share(ticker).get_historical('')
 
 
-
-# Trailing Volatility: Allow up to 1500 days
-def trailing_volatility(ticker, days=None):
-	if days==None: 
-		message = "To calculate trailing volatility for '{}' you must enter a valid number of trailing days (max. 1500).".format(ticker)
-		return {"error":message}
+def trailing_volatility(ticker, components):
+	days=None
+	for each in components: 
+		if patterns['tvol'].match(each):
+			days = int(each)
+			break
+	if days==None:
+		message = "Enter a valid number of trailing days (10-1500) to calculate trailing volatility for '{}'.".format(ticker)
+		return message
+	print(days, type(days))
 	try:
 		quotes = data.DataReader(ticker, 'google')['Close'][-days:]
 	except Exception:
 		message = "Error getting data for symbol '{}'.".format(ticker)
-		return {"error":message} 
+		return message
 	logreturns = np.log(quotes / quotes.shift(1))
 	vol = round(np.sqrt(252*logreturns.var()), 5)
 	message = "{}-day trailing volatility for *{}*: {}".format(days,ticker,vol)
 	return message
 
 
-def range_volatility(ticker, start=None, end=None):
-	
-	pattern1 = re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$') 
-	pattern2 = re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')
+# def range_volatility(ticker, start=None, end=None):
+def range_volatility(ticker, components): 
+	dates = []
+	for each in components: 
+		for pattern in patterns['rvol']:
+			if pattern.match(each):
+				dates.append(each)
+	if len(dates)<2:
+		return "Enter a valid start and end date to calculate volatility for '{}'.".format(ticker)
+	return (str(dates[0])+str(dates[1]))
 
 	if start==None or end==None: 
 		message = "Missing date input for '{}'.".format(ticker)
@@ -84,7 +100,7 @@ def range_volatility(ticker, start=None, end=None):
 OPERATIONS = {
 	"last_price":last_price,
 	"tvol":trailing_volatility,
-	"dvol":range_volatility,
+	"rvol":range_volatility,
 }
 
 
