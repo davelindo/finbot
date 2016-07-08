@@ -53,18 +53,26 @@ def trailing_volatility(ticker, components):
 			days = int(each)
 			break
 	if days==None:
-		message = "Enter a valid number of trailing days (10-1500) to calculate trailing volatility for '{}'.".format(ticker)
-		return message
-	print(days, type(days))
+		return Response.trailing_days(ticker)
 	try:
 		quotes = data.DataReader(ticker, 'google')['Close'][-days:]
 	except Exception:
-		message = "Error getting data for symbol '{}'.".format(ticker)
-		return message
+		return Response.data_notfound(ticker)
 	logreturns = np.log(quotes / quotes.shift(1))
 	vol = round(np.sqrt(252*logreturns.var()), 5)
-	message = "{}-day trailing volatility for *{}*: {}".format(days,ticker,vol)
-	return message
+	return Response.trailing_vol(days, ticker, vol)
+
+
+"""
+
+
+Re-test ALL error handling for range-volatility
+transfer all messages from rvol and tvol to response.py
+implement graph fetching method 
+historical time series (as Excel or XLV? as graph? use pandas datareader - other indexes besides 'close')
+
+
+"""
 
 
 # 2010-01-04 to present
@@ -75,28 +83,27 @@ def range_volatility(ticker, components):
 		if patterns['rvol'].match(each):
 			dates.append(each)
 	if len(dates)!=2:
-		return "Enter a valid start and end date to calculate volatility for '{}'.".format(ticker)
+		return Response.required_dates(ticker)
 	for each in dates: 
 		if each > today: 
-			return "'{}' is an invalid date.".format(each)
+			return Response.invalid_date(each)
 		try: 
 			date = datetime.datetime.strptime(each, '%Y-%m-%d')
 		except ValueError: 
-			return "'{}' is an invalid date.".format(each)
+			return Response.invalid_date(each)
 
 	# Volatility Calculation
 	dates = sorted(dates)
 	start, end = dates[0], dates[1]
 	try:
 		quotes = data.DataReader(ticker, 'google')['Close'].loc[start:end]
+		if len(quotes) < 10: 
+			return Response.range_size(ticker)
 	except Exception:
-		return "Error getting data for symbol '{}'.".format(ticker)
+		return Response.data_notfound(ticker)
 	logreturns = np.log(quotes / quotes.shift(1))
 	vol = round(np.sqrt(252*logreturns.var()), 5)
-	if np.isnan(vol): 
-		return "Enter a larger range to calculate volatility for '{}'.".format(ticker)
-	message = "Volatility for _`{}`_ from {} to {}: *`{}`*".format(ticker,start,end,vol)
-	return message
+	return Response.range_vol(ticker, start, end, vol)
 
 
 
