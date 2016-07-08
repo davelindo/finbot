@@ -13,16 +13,20 @@ from response import Response
 
 patterns = {
 	"tvol": re.compile(r'^([1-9][0-9]|[1-9][0-9][0-9]|[1-1][0-4][0-9][0-9]|1500)$'),
-	"rvol": [re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'), 
-			re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')],
+	"rvol": re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
 }
 
+
+
+# Create built in documentation
+# if Function is called with "info" as only component, return a message explaining how the function works
+# (arguments, what it returns, boundaries etc)
 
 
 
 
 def current_date(): 
-	today = datetime.date.today().strftime("%Y-%m-%d")
+	return datetime.date.today().strftime("%Y-%m-%d")
 	# "%Y-%m-%d %H:%M:%S %Z%z"
 
 
@@ -63,34 +67,35 @@ def trailing_volatility(ticker, components):
 	return message
 
 
-# def range_volatility(ticker, start=None, end=None):
+# 2010-01-04 to present
 def range_volatility(ticker, components): 
-	dates = []
+	# Parse and check: find components matching dates, ensure start and end are present, ensure dates are valid
+	today, dates = current_date(), []
 	for each in components: 
-		for pattern in patterns['rvol']:
-			if pattern.match(each):
-				dates.append(each)
-	if len(dates)<2:
+		if patterns['rvol'].match(each):
+			dates.append(each)
+	if len(dates)!=2:
 		return "Enter a valid start and end date to calculate volatility for '{}'.".format(ticker)
-	return (str(dates[0])+str(dates[1]))
+	for each in dates: 
+		if each > today: 
+			return "'{}' is an invalid date.".format(each)
+		try: 
+			date = datetime.datetime.strptime(each, '%Y-%m-%d')
+		except ValueError: 
+			return "'{}' is an invalid date.".format(each)
 
-	if start==None or end==None: 
-		message = "Missing date input for '{}'.".format(ticker)
-		return {"error":message}
-	if not(pattern1.match(start) or pattern2.match(start)) or not(pattern1.match(end) or pattern2.match(end)):
-		message = "You did not enter a valid start and end date for '{}'.".format(ticker)
-		return {"error":message}
-
-	# Need to add handling for dates that pass regex but that are not real dates with datetime library. Test above logic first.
-
+	# Volatility Calculation
+	dates = sorted(dates)
+	start, end = dates[0], dates[1]
 	try:
 		quotes = data.DataReader(ticker, 'google')['Close'].loc[start:end]
 	except Exception:
-		message = "Error getting data for symbol '{}'.".format(ticker)
-		return {"error":message} 
+		return "Error getting data for symbol '{}'.".format(ticker)
 	logreturns = np.log(quotes / quotes.shift(1))
-	vol = np.sqrt(252*logreturns.var())
-	message = "*{}* Volatility, {}-{}: {}".format(ticker,start,end,vol)
+	vol = round(np.sqrt(252*logreturns.var()), 5)
+	if np.isnan(vol): 
+		return "Enter a larger range to calculate volatility for '{}'.".format(ticker)
+	message = "Volatility for _`{}`_ from {} to {}: *`{}`*".format(ticker,start,end,vol)
 	return message
 
 
