@@ -1,7 +1,8 @@
 class Response: 
 
 	info = {
-		"rvol" : "`rvol` calculates the volatility of a security using end-of-day prices over the time period specified. > Format: `$ticker rvol YYYY-MM-dd`"
+		"tvol" : "`tvol` calculates volatility using end-of-day prices for the given number of trailing trading days. \n Format: `$<ticker> tvol <# days>`",
+		"rvol" : "`rvol` calculates the volatility of a security using end-of-day prices over the time period specified. \n Format: `$<ticker> rvol YYYY-MM-dd YYYY-MM-dd`", 
 	}
 
 
@@ -17,7 +18,7 @@ class Response:
 		return "No result found for '{}'".format(ticker)
 
 	def last_price(ticker, price, month, day, trade_time): 
-		return "Last Price for *{}*: *`{}`* ({} {} @ {})".format(ticker, price, month, day, trade_time)
+		return "Last Price for *{}*: *`${}`* ({} {} @ {})".format(ticker, price, month, day, trade_time)
 
 
 	# Trailing Volatility
