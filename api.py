@@ -6,12 +6,17 @@ from pandas_datareader import data
 import datetime
 import time
 import calendar
+import urllib.request
 import re
 
 from response import Response
 
 
-patterns = {
+PATTERNS = {
+	"-g": {
+		'period' : ['1d','5d','1m','3m','6m','1y','2y','5y'],
+		'mavg' : ['20ma', '50ma','100ma','200ma']
+		}, 
 	"tvol": re.compile(r'^([1-9][0-9]|[1-9][0-9][0-9]|[1-1][0-4][0-9][0-9]|1500)$'),
 	"rvol": re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
 }
@@ -45,11 +50,35 @@ def last_price(ticker):
 # def historical_range(ticker, start=None, end=None): 
 # 	return Share(ticker).get_historical('')
 
+"""
+
+historical time series (as Excel or XLV? as graph? use pandas datareader - other indexes besides 'close')
+
+"""
+
+def graph(ticker, components): 
+	period = None
+	components = [item.lower() for item in components]
+	date_patterns = list(set(PATTERNS['-g']['period']).intersection(components))
+	mavg_patterns = list(set(PATTERNS['-g']['mavg']).intersection(components))
+	if not date_patterns: 
+		period = '6m'
+	else:
+		period = date_patterns[0]
+	url = 'http://chart.finance.yahoo.com/z?s=' + str(ticker.upper()) + '&t=' + period + '&q=l&l=on&z=s&p='
+	if mavg_patterns: 
+		for each in mavg_patterns: 
+			each.rstrip('ma')
+			each = "m"+each+","
+			url+=each			
+	return url
+	# urllib.request.urlretrieve('')
+
 
 def trailing_volatility(ticker, components):
 	days=None
 	for each in components: 
-		if patterns['tvol'].match(each):
+		if PATTERNS['tvol'].match(each):
 			days = int(each)
 			break
 	if days==None:
@@ -63,24 +92,12 @@ def trailing_volatility(ticker, components):
 	return Response.trailing_vol(days, ticker, vol)
 
 
-"""
-
-
-Re-test ALL error handling for range-volatility
-transfer all messages from rvol and tvol to response.py
-implement graph fetching method 
-historical time series (as Excel or XLV? as graph? use pandas datareader - other indexes besides 'close')
-
-
-"""
-
-
 # 2010-01-04 to present
 def range_volatility(ticker, components): 
 	# Parse and check: find components matching dates, ensure start and end are present, ensure dates are valid
 	today, dates = current_date(), []
 	for each in components: 
-		if patterns['rvol'].match(each):
+		if PATTERNS['rvol'].match(each):
 			dates.append(each)
 	if len(dates)!=2:
 		return Response.required_dates(ticker)
@@ -111,6 +128,7 @@ def range_volatility(ticker, components):
 
 OPERATIONS = {
 	"last_price":last_price,
+	"-g":graph,
 	"tvol":trailing_volatility,
 	"rvol":range_volatility,
 }

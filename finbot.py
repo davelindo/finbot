@@ -22,7 +22,7 @@ slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
 
 # COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
-COMMANDS = ['tvol', 'rvol']
+COMMANDS = ['-g', 'tvol', 'rvol']
 
 
 
@@ -147,6 +147,7 @@ class Finbot:
 		"""
 		Each user query is forwarded to the appropriate function based on the command in the query.
 		Once the query has been processed, the resulting response is sent as a message to the channel. 
+		If no commands are found, the default is to fetch the last price for the ticker.
 		"""
 		components = query.split(' ')
 		if '' in components: 
@@ -160,7 +161,6 @@ class Finbot:
 			components = components[2:]
 			message = OPERATIONS[command[0]](ticker, components)
 			return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
-		# If no commands specified, default is to get last price
 		message = OPERATIONS["last_price"](ticker)
 		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
