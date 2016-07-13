@@ -160,7 +160,10 @@ class Finbot:
 				return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 			components = components[2:]
 			message = OPERATIONS[command[0]](ticker, components)
-			return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+
+
+			return slack_client.api_call("chat.postMessage", channel=channel, attachments=message, as_user=True)
+			# return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 		message = OPERATIONS["last_price"](ticker)
 		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
@@ -177,6 +180,15 @@ class Finbot:
 		Move general finbot responses on startup, etc to response.py. Add more random responses. 
 
 		Implement -g function that fetches graph. Flags for durations (1d, 5d, 3M, etc)
+
+		--> finish graphing function - error handling? (get price for ticker first?)
+		--> create copy of -g function that uses urlretrieve - save image locally with UUID as name, upload, then delete locally 
+
+		- Historical pricing (yahoo finance API or pandas datareader)
+		- open, close, high, low, range over any given period of time, high/low over any given period of time
+
+		- Fundamentals, ratios, etc
+		- ETF Holdings
 
 
 

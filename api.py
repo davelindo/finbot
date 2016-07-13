@@ -65,14 +65,23 @@ def graph(ticker, components):
 		period = '6m'
 	else:
 		period = date_patterns[0]
+
+	# Build Graph URL
+	# '&q=l&l=s&p='
 	url = 'http://chart.finance.yahoo.com/z?s=' + str(ticker.upper()) + '&t=' + period + '&q=l&l=on&z=s&p='
 	if mavg_patterns: 
 		for each in mavg_patterns: 
 			each.rstrip('ma')
 			each = "m"+each+","
-			url+=each			
-	return url
-	# urllib.request.urlretrieve('')
+			url+=each	
+
+	# Build Attachment
+	fallback = "Graph for {} – {}".format(ticker, url)
+	title = "{} {}".format(ticker, period)
+	text = ""
+	footer = "Retrieved from Yahoo! Finance"
+	attachment = '[{{"fallback": "{}", "title": "{}", "title_link": "{}", "text": "{}", "image_url": "{}", "color": "38629c", "footer": "{}" }}]'.format(fallback, title, url, text, url, footer)
+	return attachment
 
 
 def trailing_volatility(ticker, components):
