@@ -17,37 +17,13 @@ FINBOT_ON = True
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
-
-
-
-
 # COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
 COMMANDS = ['-g', 'tvol', 'rvol']
-
-
-
-
-PATTERNS = {
-
-	'dvol': {
-		"type": "REGEX",
-		"patterns": [re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'), 
-					re.compile(r'^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$')]
-			}, 
-	'tvol': {
-		"type": "REGEX",
-		"patterns": []
-	},
-	'-g': {
-		"type": "FLAG",
-		"patterns": ['1d', '5d', '1M', '3M', '6M', 'YTD', '1Y', '2Y', '5Y']
-	},
-
-}
 
 ON_MESSAGES = [
 "Ready!",
 "Finbot is now ON.",
+"Finbot ready.",
 "How can I help?",
 ]
 
@@ -58,7 +34,7 @@ class Finbot:
 	@staticmethod
 	def get_output(rtm_output):
 		"""
-		Determines whether Finbot needs to process the output.
+		Determines whether Finbot needs to handle the output.
 		"""
 		if rtm_output and len(rtm_output) > 0:
 			for output in rtm_output:
@@ -162,10 +138,7 @@ class Finbot:
 			output = OPERATIONS[command[0]](ticker, components)
 			message = output["message"]
 			attachments = output["attachments"]
-
-			
 			return slack_client.api_call("chat.postMessage", channel=channel, text=message, attachments=attachments, as_user=True)
-			# return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 		message = OPERATIONS["last_price"](ticker)
 		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
@@ -182,11 +155,6 @@ class Finbot:
 
 		Move general finbot responses on startup, etc to response.py. Add more random responses. 
 
-		Implement -g function that fetches graph. Flags for durations (1d, 5d, 3M, etc)
-
-		--> finish graphing function - error handling? (get price for ticker first?)
-		--> create copy of -g function that uses urlretrieve - save image locally with UUID as name, upload, then delete locally 
-
 		- Historical pricing (yahoo finance API or pandas datareader)
 		- open, close, high, low, range over any given period of time, high/low over any given period of time
 
@@ -194,18 +162,7 @@ class Finbot:
 		- ETF Holdings
 
 
-
-
-
-
-
 		"""
-
-
-
-
-
-
 
 
 

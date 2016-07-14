@@ -4,9 +4,7 @@ import pandas as pd
 from pandas import np
 from pandas_datareader import data
 import datetime
-import time
 import calendar
-import urllib.request
 import re
 
 from response import Response
@@ -20,14 +18,6 @@ PATTERNS = {
 	"tvol": re.compile(r'^([1-9][0-9]|[1-9][0-9][0-9]|[1-1][0-4][0-9][0-9]|1500)$'),
 	"rvol": re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
 }
-
-
-
-# Create built in documentation
-# if Function is called with "info" as only component, return a message explaining how the function works
-# (arguments, what it returns, boundaries etc)
-
-
 
 
 def current_date(): 
@@ -78,7 +68,7 @@ def graph(ticker, components):
 
 	# Build Attachment
 	fallback = "Graph for {} – {}".format(ticker, url)
-	title = "{} {}".format(ticker, period)
+	title = "{} - {}".format(ticker, period)
 	text = ""
 	footer = "Retrieved from Yahoo! Finance"
 	attachment = '[{{"fallback": "{}", "title": "{}", "title_link": "{}", "text": "{}", "image_url": "{}", "color": "38629c", "footer": "{}" }}]'.format(fallback, title, url, text, url, footer)
