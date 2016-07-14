@@ -20,14 +20,6 @@ slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 # COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
 COMMANDS = ['-g', 'tvol', 'rvol']
 
-ON_MESSAGES = [
-"Ready!",
-"Finbot is now ON.",
-"Finbot ready.",
-"How can I help?",
-]
-
-
 
 class Finbot: 
 
@@ -52,7 +44,7 @@ class Finbot:
 
 		if raw_text.lower() == "finbot on": 
 			FINBOT_ON = True
-			message = random.choice(ON_MESSAGES)
+			message = random.choice(Response.ON_MESSAGES)
 			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 			return True
 
@@ -61,7 +53,7 @@ class Finbot:
 
 		elif raw_text.lower() == "finbot off":
 			FINBOT_ON = False
-			message = "Going to sleep..."
+			message = random.choice(Response.OFF_MESSAGES)
 			slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 			return True
 		else: 
@@ -92,7 +84,7 @@ class Finbot:
 			return None
 
 		if len(queries) > 5: 
-			warning = "Take it easy! I can only handle a few requests at a time."
+			warning = random.choice(Response.TOO_MANY_REQUESTS)
 			slack_client.api_call("chat.postMessage", channel=channel, text=warning, as_user=True)
 			queries = queries[0:5]
 
@@ -109,12 +101,12 @@ class Finbot:
 		if 'info' in query: 
 			command = list(set(COMMANDS).intersection(query))
 			if not command: 
-				message = "Use `<operation name> info` to get information about how to format a query."
+				message = Response.BOT_INFO
 			else: 
 				command = command[0]
 				message = Response.info[command]
 		else: 
-			message = "Use `<operation name> info` to get information about how to format a query."
+			message = Response.BOT_INFO
 		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
 
@@ -125,6 +117,7 @@ class Finbot:
 		Once the query has been processed, the resulting response is sent as a message to the channel. 
 		If no commands are found, the default is to fetch the last price for the ticker.
 		"""
+		# components - each query split into a list of words and symbols
 		components = query.split(' ')
 		if '' in components: 
 			components.remove('')
@@ -132,7 +125,7 @@ class Finbot:
 		if len(components)>1:
 			command = list(set(COMMANDS).intersection(components[1:]))
 			if not command: 
-				message = "I couldn't understand your request for ticker '{}'.".format(ticker)
+				message = Response.unknown_command(ticker)
 				return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 			components = components[2:]
 			output = OPERATIONS[command[0]](ticker, components)
@@ -149,17 +142,13 @@ class Finbot:
 		"""
 		To do 
 
-		built-in documentation: 
-		if message starts with @finbot, look for "<command> info" and get the response from Response.info[command] static class variable
-		Where to implement? How to avoid entanglement and preserve single responsibility? 
-
-		Move general finbot responses on startup, etc to response.py. Add more random responses. 
-
 		- Historical pricing (yahoo finance API or pandas datareader)
 		- open, close, high, low, range over any given period of time, high/low over any given period of time
 
 		- Fundamentals, ratios, etc
-		- ETF Holdings
+		- ETF Holdings - if used, need to include robust tests to ensure dataframe is intact and formatted correctly to avoid 
+		unhandled errors
+			+ attach as CSV or Excel file
 
 
 		"""

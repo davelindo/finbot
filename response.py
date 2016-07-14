@@ -9,13 +9,36 @@ class Response:
 		"rvol" : "`rvol` calculates annualized historical volatility of a security using daily log returns over the time period specified. \n Format: `$<ticker> rvol YYYY-MM-dd YYYY-MM-dd`", 
 	}
 
+	ON_MESSAGES = [
+	"Ready!",
+	"Finbot is now ON.",
+	"Finbot ready.",
+	"How can I help?",
+	"What can I do for you?"
+	]
+
+	OFF_MESSAGES = [
+	"Going to sleep...",
+	"Sleeping...",
+	"Turning off...",
+	"Shutting down...",
+	"Finbot is now OFF."
+	]
+
+	TOO_MANY_REQUESTS = [
+	"Take it easy! I can only handle a few requests at a time.",
+	"I can only handle a few requests per message."
+	]
+
+	BOT_INFO = "Use `@finbot <operation name> info` to get information about how to format a query."
+
 
 	# General
 	def data_notfound(ticker): 
 		return "Error getting data for symbol '{}'.".format(ticker)
 
-
-
+	def unknown_command(ticker): 
+		return "I couldn't understand your request for ticker '{}'.".format(ticker)
 
 	# Last Price
 	def last_price_notfound(ticker):

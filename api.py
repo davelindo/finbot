@@ -23,7 +23,7 @@ PATTERNS = {
 def current_date(): 
 	return datetime.date.today().strftime("%Y-%m-%d")
 	# "%Y-%m-%d %H:%M:%S %Z%z"
-
+	
 
 def last_price(ticker): 
 	ticker = ticker.upper()
