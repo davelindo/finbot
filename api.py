@@ -15,7 +15,7 @@ from response import Response
 PATTERNS = {
 	"-g": {
 		'period' : ['1d','5d','1m','3m','6m','1y','2y','5y'],
-		'mavg' : ['20ma', '50ma','100ma','200ma']
+		'mavg' : ['20ma','50ma','100ma','200ma']
 		}, 
 	"tvol": re.compile(r'^([1-9][0-9]|[1-9][0-9][0-9]|[1-1][0-4][0-9][0-9]|1500)$'),
 	"rvol": re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
@@ -45,8 +45,6 @@ def last_price(ticker):
 	trade_time = trade_datetime[1] + " UTC+0"
 	return Response.last_price(ticker, price, month, day, trade_time)
 
-
-
 # def historical_range(ticker, start=None, end=None): 
 # 	return Share(ticker).get_historical('')
 
@@ -57,6 +55,10 @@ historical time series (as Excel or XLV? as graph? use pandas datareader - other
 """
 
 def graph(ticker, components): 
+	"""
+	Fetches graph by ticker from Yahoo Finance and sends image as an attachment. 
+	Input for time period and displayed moving averages.
+	"""
 	period = None
 	components = [item.lower() for item in components]
 	date_patterns = list(set(PATTERNS['-g']['period']).intersection(components))
@@ -67,7 +69,6 @@ def graph(ticker, components):
 		period = date_patterns[0]
 
 	# Build Graph URL
-	# '&q=l&l=s&p='
 	url = 'http://chart.finance.yahoo.com/z?s=' + str(ticker.upper()) + '&t=' + period + '&q=l&l=on&z=s&p='
 	if mavg_patterns: 
 		for each in mavg_patterns: 
@@ -81,7 +82,8 @@ def graph(ticker, components):
 	text = ""
 	footer = "Retrieved from Yahoo! Finance"
 	attachment = '[{{"fallback": "{}", "title": "{}", "title_link": "{}", "text": "{}", "image_url": "{}", "color": "38629c", "footer": "{}" }}]'.format(fallback, title, url, text, url, footer)
-	return attachment
+	output = {"attachments" : attachment, "message" : ''}
+	return output
 
 
 def trailing_volatility(ticker, components):
@@ -98,7 +100,9 @@ def trailing_volatility(ticker, components):
 		return Response.data_notfound(ticker)
 	logreturns = np.log(quotes / quotes.shift(1))
 	vol = round(np.sqrt(252*logreturns.var()), 5)
-	return Response.trailing_vol(days, ticker, vol)
+	message = Response.trailing_vol(days, ticker, vol)
+	output = {"message" : message, "attachments" : '[]'}
+	return output
 
 
 # 2010-01-04 to present
@@ -129,7 +133,9 @@ def range_volatility(ticker, components):
 		return Response.data_notfound(ticker)
 	logreturns = np.log(quotes / quotes.shift(1))
 	vol = round(np.sqrt(252*logreturns.var()), 5)
-	return Response.range_vol(ticker, start, end, vol)
+	message = Response.range_vol(ticker, start, end, vol)
+	output = {"message" : message, "attachments" : '[]'}
+	return output
 
 
 

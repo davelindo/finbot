@@ -159,13 +159,16 @@ class Finbot:
 				message = "I couldn't understand your request for ticker '{}'.".format(ticker)
 				return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 			components = components[2:]
-			message = OPERATIONS[command[0]](ticker, components)
+			output = OPERATIONS[command[0]](ticker, components)
+			message = output["message"]
+			attachments = output["attachments"]
 
-
-			return slack_client.api_call("chat.postMessage", channel=channel, attachments=message, as_user=True)
+			
+			return slack_client.api_call("chat.postMessage", channel=channel, text=message, attachments=attachments, as_user=True)
 			# return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 		message = OPERATIONS["last_price"](ticker)
 		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+
 
 
 
