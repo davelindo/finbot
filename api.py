@@ -49,14 +49,12 @@ def name_exchange(ticker, components):
 	try: 
 		info = data.get_components_yahoo(ticker)
 	except Exception: 
-		message = Response.data_notfound(ticker)
+		return {"message": Response.data_notfound(ticker), "attachments": '[]'}
 	name, symbol = info['name'][0], info['exchange'][0]
 	exchange = exchanges.get(symbol)
 	if not exchange: 
 		exchange = symbol
-	message = Response.name_exchange_response(ticker, name, exchange)
-	output = {"message": message, "attachments": '[]'}
-	return output
+	return {"message": Response.name_exchange_response(ticker, name, exchange), "attachments": '[]'}
 
 
 
@@ -95,8 +93,7 @@ def graph(ticker, components):
 	text = ""
 	footer = "Retrieved from Yahoo! Finance"
 	attachment = '[{{"fallback": "{}", "title": "{}", "title_link": "{}", "text": "{}", "image_url": "{}", "color": "38629c", "footer": "{}" }}]'.format(fallback, title, url, text, url, footer)
-	output = {"attachments" : attachment, "message" : ''}
-	return output
+	return {"attachments" : attachment, "message" : ''}
 
 
 def trailing_volatility(ticker, components):
@@ -106,16 +103,14 @@ def trailing_volatility(ticker, components):
 			days = int(each)
 			break
 	if days==None:
-		return Response.trailing_days(ticker)
+		return {"message": Response.trailing_days(ticker), "attachments": '[]'}
 	try:
 		quotes = data.DataReader(ticker, 'google')['Close'][-days:]
 	except Exception:
-		return Response.data_notfound(ticker)
+		return {"message": Response.data_notfound(ticker), "attachments": '[]'}
 	logreturns = np.log(quotes / quotes.shift(1))
 	vol = round(np.sqrt(252*logreturns.var()), 5)
-	message = Response.trailing_vol(days, ticker, vol)
-	output = {"message" : message, "attachments" : '[]'}
-	return output
+	return {"message" : Response.trailing_vol(days, ticker, vol), "attachments" : '[]'}
 
 
 # 2010-01-04 to present
@@ -126,14 +121,14 @@ def range_volatility(ticker, components):
 		if PATTERNS['rvol'].match(each):
 			dates.append(each)
 	if len(dates)!=2:
-		return Response.required_dates(ticker)
+		return {"message": Response.required_dates(ticker), "attachments": '[]'}
 	for each in dates: 
 		if each > today: 
-			return Response.invalid_date(each)
+			return {"message": Response.invalid_date(each), "attachments": '[]'}
 		try: 
 			date = datetime.datetime.strptime(each, '%Y-%m-%d')
 		except ValueError: 
-			return Response.invalid_date(each)
+			return {"message": Response.invalid_date(each), "attachments": '[]'}
 
 	# Volatility Calculation
 	dates = sorted(dates)
@@ -141,14 +136,12 @@ def range_volatility(ticker, components):
 	try:
 		quotes = data.DataReader(ticker, 'google')['Close'].loc[start:end]
 		if len(quotes) < 10: 
-			return Response.range_size(ticker)
+			return {"message": Response.range_size(ticker), "attachments": '[]'}
 	except Exception:
-		return Response.data_notfound(ticker)
+		return {"message": Response.data_notfound(ticker), "attachments": '[]'}
 	logreturns = np.log(quotes / quotes.shift(1))
 	vol = round(np.sqrt(252*logreturns.var()), 5)
-	message = Response.range_vol(ticker, start, end, vol)
-	output = {"message" : message, "attachments" : '[]'}
-	return output
+	return {"message" : Response.range_vol(ticker, start, end, vol), "attachments" : '[]'}
 
 
 
