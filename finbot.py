@@ -130,8 +130,10 @@ class Finbot:
 			components = components[2:]
 			output = OPERATIONS[command[0]](ticker, components)
 			message = output["message"]
-			attachments = output["attachments"]
-			return slack_client.api_call("chat.postMessage", channel=channel, text=message, attachments=attachments, as_user=True)
+			if output.get("attachments"):
+				attachments = output['attachments']
+				return slack_client.api_call("chat.postMessage", channel=channel, text=message, attachments=attachments, as_user=True)
+			return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 		message = OPERATIONS["last_price"](ticker)
 		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
