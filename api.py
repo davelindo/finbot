@@ -3,6 +3,7 @@ from yahoo_finance import Share, Currency
 import pandas as pd
 from pandas import np
 from pandas_datareader import data
+from fractions import Fraction
 import datetime
 import calendar
 import re
@@ -24,7 +25,7 @@ def current_date():
 	return datetime.date.today().strftime("%Y-%m-%d")
 	# "%Y-%m-%d %H:%M:%S %Z%z"
 	
-	
+
 def last_price(ticker): 
 	ticker = ticker.upper()
 	price = Share(ticker).get_price()
@@ -93,18 +94,30 @@ def name_exchange(ticker, components):
 		exchange = symbol
 	return {"message": Response.name_exchange_response(ticker, name, exchange)}
 
-def actions(ticker):
-	pass
-	# data.get_data_yahoo_actions returns dataFrame of dividends and splits
 
+def actions(ticker, components):
+	# Splits are quoted as decimals - convert to fraction ('7 for 1' vs .142857)
+	def split_ratio(dec): 
+		frac = Fraction.from_float(dec).limit_denominator(10)
+		num, denom = frac.numerator, frac.denominator 
+		return "{} for {}".format(denom, num)
+	try: 
+		actions = data.get_data_yahoo_actions(ticker)
+	except Exception: 
+		return {"message": Response.data_notfound(ticker)}
+	if len(actions)==0: 
+		return {"message": Response.no_actions(ticker)}
+	actions.ix[actions.action=="SPLIT", 'value'] = actions.value.map(lambda x: split_ratio(x))
+	actions['action'] = actions.action.map(lambda x: x.lower())
+	actions.index = actions.index.map(lambda x: datetime.date(x.year, x.month, x.day).strftime('%Y-%m-%d'))
+	actions.iloc[::-1]
 
+	# Build message from DataFrame
+	message = Response.list_actions(ticker)
+	for date, action, value in zip(actions.index, actions.action, actions.value):
+		message += ("\n{} - {} `{}`".format(date, action, value))
+	return {"message": message}
 
-
-"""
-
-historical time series (as Excel or XLV? as graph? use pandas datareader - other indexes besides 'close')
-
-"""
 
 def graph(ticker, components): 
 	"""
@@ -192,6 +205,7 @@ OPERATIONS = {
 	"last_price":last_price,
 	"hist":historical_data,
 	"?":name_exchange,
+	"actions":actions,
 	"-g":graph,
 	"tvol":trailing_volatility,
 	"rvol":range_volatility,

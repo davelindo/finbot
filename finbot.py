@@ -17,8 +17,8 @@ FINBOT_ON = True
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
-# COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
-COMMANDS = ['hist', '?', '-g', 'tvol', 'rvol']
+# COMMANDS = [ 'PE']
+COMMANDS = ['hist', '?', 'actions', '-g', 'tvol', 'rvol']
 
 
 class Finbot: 
@@ -142,15 +142,11 @@ class Finbot:
 
 
 		"""
-		To do 
-
-		- Historical pricing (yahoo finance API or pandas datareader)
-		- open, close, high, low, range over any given period of time, high/low over any given period of time
-
+		- Stock actions (from datareader)
 		- Fundamentals, ratios, etc
 		- ETF Holdings - if used, need to include robust tests to ensure dataframe is intact and formatted correctly to avoid 
 		unhandled errors
-			+ attach as CSV or Excel file
+			+ attach as CSV or Excel file...
 
 
 		"""

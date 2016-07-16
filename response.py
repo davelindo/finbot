@@ -44,7 +44,7 @@ class Response:
 
 	# Last Price
 	def last_price_notfound(ticker):
-		return "No result found for '{}'".format(ticker)
+		return "No result found for '{}'.".format(ticker)
 
 	def last_price(ticker, price, month, day, trade_time): 
 		return "Last Price for *{}*: *`${}`* ({} {} @ {})".format(ticker, price, month, day, trade_time)
@@ -52,6 +52,13 @@ class Response:
 	# Name and Exchange
 	def name_exchange_response(ticker, name, exchange): 
 		return "*{} - {}* ({})".format(ticker, name, exchange)
+
+	# Actions
+	def no_actions(ticker): 
+		return "No corporate actions found for {}.".format(ticker)
+
+	def list_actions(ticker): 
+		return "Corporate Actions for *{}* (Date, Type, Value):".format(ticker)
 
 
 	# Trailing Volatility
