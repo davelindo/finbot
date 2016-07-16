@@ -1,10 +1,10 @@
 class Response: 
 
 	info = {
+		"?" : "Use `$<ticker> ?` to fetch the name and exchange for a publicly traded company.",
 		"-g" : """Format: `$<ticker> -g <period> <mavg>` \
-		\n Example: `$AAPL -g 1y 50ma 200ma` \
-		\n ```Supported time periods for graphing: 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y. The period will default to 1d if a valid value is not entered. Four moving averages are supported: 20-, 50-, 100-, and 200-day. Any combination of the four, or none at all, can be displayed at once.```""",
-
+			\n Example: `$AAPL -g 1y 50ma 200ma` \
+			\n ```Supported time periods for graphing: 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y. The period will default to 1d if a valid value is not entered. Four moving averages are supported: 20-, 50-, 100-, and 200-day. Any combination of the four, or none at all, can be displayed at once.```""",
 		"tvol" : "`tvol` calculates annualized historical volatility using daily log returns for the given number of trailing trading days. \n Format: `$<ticker> tvol <# days>`",
 		"rvol" : "`rvol` calculates annualized historical volatility of a security using daily log returns over the time period specified. \n Format: `$<ticker> rvol YYYY-MM-dd YYYY-MM-dd`", 
 	}
@@ -60,18 +60,29 @@ class Response:
 		return "{}-day annualized trailing volatility for *{}*: *`{}`*".format(days,ticker,vol)
 
 
-	# Range Volatility
-	def required_dates(ticker): 
+	# Range Volatility & Historical Data
+	def vol_required_dates(ticker): 
 		return "Enter a valid start and end date to calculate volatility for '{}'.".format(ticker)
 
-	def invalid_date(ticker): 
-		return "'{}' is not a valid date.".format(ticker)
-
-	def range_size(ticker): 
+	def vol_range_size(ticker): 
 		return "Enter a larger range to calculate volatility for '{}' (min. 10 trading days).".format(ticker)
-
+		
 	def range_vol(ticker, start, end, vol):
 		return "Annualized Volatility for *{}* from {} to {}: *`{}`*".format(ticker,start,end,vol)
+
+	def invalid_date(date): 
+		return "'{}' is not a valid date.".format(date)
+
+	def no_data_for_date(date): 
+		return "No data for {}.".format(date)
+
+	def missing_dates(ticker):
+		return "Enter valid dates to get historical data for {}.".format(ticker)
+
+	def historical_price(ticker, date, _open, high, low, close, volume): 
+		return "*{}*, {} \n Open: {} \n High: {} \n Low: {} \n Close: {} \n Volume: {}".format(ticker,date,_open,high,low,close,volume)
+
+
 
 
 

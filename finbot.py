@@ -18,7 +18,7 @@ FINBOT_ON = True
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
 # COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
-COMMANDS = ['?', '-g', 'tvol', 'rvol']
+COMMANDS = ['hist', '?', '-g', 'tvol', 'rvol']
 
 
 class Finbot: 

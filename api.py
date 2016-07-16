@@ -16,7 +16,7 @@ PATTERNS = {
 		'mavg' : ['20ma','50ma','100ma','200ma']
 		}, 
 	"tvol": re.compile(r'^([1-9][0-9]|[1-9][0-9][0-9]|[1-1][0-4][0-9][0-9]|1500)$'),
-	"rvol": re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
+	"valid_date": re.compile(r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
 }
 
 
@@ -35,14 +35,51 @@ def last_price(ticker):
 	trade_time = trade_datetime[1] + " UTC+0"
 	return Response.last_price(ticker, price, month, day, trade_time)
 
-def historical_range(ticker, start=None, end=None): 
-	return Share(ticker).get_historical('')
 
-def historical_price(ticker, date=None): 
-	pass
 
-def full_historical_data(ticker, start, end): 
-	pass
+def historical_data(ticker, components): 
+	# hist command
+	# Adjusted closing prices
+	# -r flag: find range (2 dates only) -full flag: attach full table of prices 
+	today, dates = current_date(), []
+	for each in components: 
+		if PATTERNS['valid_date'].match(each):
+			dates.append(each)
+	try: 
+		quotes = data.get_data_google(ticker)
+	except Exception: 
+		return {"message": Response.data_notfound(ticker)}
+	if not dates: 
+		return {"message": Response.missing_dates(ticker)}
+	for each in dates: 
+		if each > today: 
+			return {"message": Response.invalid_date(each)}
+		try: 
+			date = datetime.datetime.strptime(each, '%Y-%m-%d')
+		except ValueError: 
+			return {"message": Response.invalid_date(each)}
+	if len(dates)==1: 
+		date = dates[0]
+		try: 
+			quote = quotes.loc[date]
+		except KeyError: 
+			return {"message": Response.no_data_for_date(date)}
+		return {"message": Response.historical_price(
+			ticker, date, quote['Open'], quote['High'], quote['Low'], quote['Close'], int(quote['Volume']))}
+
+		
+
+	elif len(dates)==2: 
+		pass
+		# if
+
+	else: 
+		pass
+		# Response: Too many dates
+
+
+
+
 
 def name_exchange(ticker, components): 
 	exchanges = {"NMS":"NASDAQ","NYQ":"NYSE"}
@@ -55,6 +92,10 @@ def name_exchange(ticker, components):
 	if not exchange: 
 		exchange = symbol
 	return {"message": Response.name_exchange_response(ticker, name, exchange)}
+
+def actions(ticker):
+	pass
+	# data.get_data_yahoo_actions returns dataFrame of dividends and splits
 
 
 
@@ -118,10 +159,10 @@ def range_volatility(ticker, components):
 	# Parse and check: find components matching dates, ensure start and end are present, ensure dates are valid
 	today, dates = current_date(), []
 	for each in components: 
-		if PATTERNS['rvol'].match(each):
+		if PATTERNS['valid_date'].match(each):
 			dates.append(each)
 	if len(dates)!=2:
-		return {"message": Response.required_dates(ticker)}
+		return {"message": Response.vol_required_dates(ticker)}
 	for each in dates: 
 		if each > today: 
 			return {"message": Response.invalid_date(each)}
@@ -136,7 +177,7 @@ def range_volatility(ticker, components):
 	try:
 		quotes = data.DataReader(ticker, 'google')['Close'].loc[start:end]
 		if len(quotes) < 10: 
-			return {"message": Response.range_size(ticker)}
+			return {"message": Response.vol_range_size(ticker)}
 	except Exception:
 		return {"message": Response.data_notfound(ticker)}
 	logreturns = np.log(quotes / quotes.shift(1))
@@ -149,6 +190,7 @@ def range_volatility(ticker, components):
 
 OPERATIONS = {
 	"last_price":last_price,
+	"hist":historical_data,
 	"?":name_exchange,
 	"-g":graph,
 	"tvol":trailing_volatility,
