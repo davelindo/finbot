@@ -3,6 +3,7 @@ class Response:
 	info = {
 		"hist": """Use `hist` with a single date to fetch price data, or with two dates to get the range of a stock's price over a period of time. Data is available from 2010 to present and is adjusted for splits. \n Format: `$<ticker> hist YYYY-MM-dd YYYY-MM-dd`""",
 		"?" : "Use `$<ticker> ?` to fetch the name and exchange for a publicly traded company.",
+		"actions": "Use `$<ticker> actions` to fetch a list of corporate actions (dividends and stock splits).",
 		"-g" : """Format: `$<ticker> -g <period> <mavg>` \
 			\n Example: `$AAPL -g 1y 50ma 200ma` \
 			\n ```Supported time periods for graphing: 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y. The period will default to 1d if a valid value is not entered. Four moving averages are supported: 20-, 50-, 100-, and 200-day. Any combination of the four, or none at all, can be displayed at once.```""",
