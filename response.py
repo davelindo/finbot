@@ -3,7 +3,7 @@ class Response:
 	info = {
 		"-g" : """Format: `$<ticker> -g <period> <mavg>` \
 		\n Example: `$AAPL -g 1y 50ma 200ma` \
-		\n ```Supported time periods for graphing: 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y. The period will default to 6m if a valid value is not entered. Four moving averages are supported: 20-, 50-, 100-, and 200-day. Any combination of the four, or none at all, can be displayed at once.```""",
+		\n ```Supported time periods for graphing: 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y. The period will default to 1d if a valid value is not entered. Four moving averages are supported: 20-, 50-, 100-, and 200-day. Any combination of the four, or none at all, can be displayed at once.```""",
 
 		"tvol" : "`tvol` calculates annualized historical volatility using daily log returns for the given number of trailing trading days. \n Format: `$<ticker> tvol <# days>`",
 		"rvol" : "`rvol` calculates annualized historical volatility of a security using daily log returns over the time period specified. \n Format: `$<ticker> rvol YYYY-MM-dd YYYY-MM-dd`", 
@@ -46,6 +46,10 @@ class Response:
 
 	def last_price(ticker, price, month, day, trade_time): 
 		return "Last Price for *{}*: *`${}`* ({} {} @ {})".format(ticker, price, month, day, trade_time)
+
+	# Name and Exchange
+	def name_exchange_response(ticker, name, exchange): 
+		return "*{} - {}* ({})".format(ticker, name, exchange)
 
 
 	# Trailing Volatility

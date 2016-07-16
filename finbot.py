@@ -18,7 +18,7 @@ FINBOT_ON = True
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
 # COMMANDS = ['tvol', 'dvol', 'PE', 'vol', 'range', 'high', 'low', 'open', 'close', 'name', 'exchange', '-g']
-COMMANDS = ['-g', 'tvol', 'rvol']
+COMMANDS = ['?', '-g', 'tvol', 'rvol']
 
 
 class Finbot: 
@@ -38,7 +38,7 @@ class Finbot:
 	def bot_status(raw_text, channel): 
 		"""
 		Returns True when Bot shouldn't perform any further handling of the output, 
-		either because the bot is turned off or because the user was turning the bot on/off.
+		either because the bot is turned off or because the output was the user turning the bot on/off.
 		"""
 		global FINBOT_ON
 

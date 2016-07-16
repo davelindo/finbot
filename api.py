@@ -35,8 +35,31 @@ def last_price(ticker):
 	trade_time = trade_datetime[1] + " UTC+0"
 	return Response.last_price(ticker, price, month, day, trade_time)
 
-# def historical_range(ticker, start=None, end=None): 
-# 	return Share(ticker).get_historical('')
+def historical_range(ticker, start=None, end=None): 
+	return Share(ticker).get_historical('')
+
+def historical_price(ticker, date=None): 
+	pass
+
+def full_historical_data(ticker, start, end): 
+	pass
+
+def name_exchange(ticker, components): 
+	exchanges = {"NMS":"NASDAQ","NYQ":"NYSE"}
+	try: 
+		info = data.get_components_yahoo(ticker)
+	except Exception: 
+		message = Response.data_notfound(ticker)
+	name, symbol = info['name'][0], info['exchange'][0]
+	exchange = exchanges.get(symbol)
+	if not exchange: 
+		exchange = symbol
+	message = Response.name_exchange_response(ticker, name, exchange)
+	output = {"message": message, "attachments": '[]'}
+	return output
+
+
+
 
 """
 
@@ -54,7 +77,7 @@ def graph(ticker, components):
 	date_patterns = list(set(PATTERNS['-g']['period']).intersection(components))
 	mavg_patterns = list(set(PATTERNS['-g']['mavg']).intersection(components))
 	if not date_patterns: 
-		period = '6m'
+		period = '1d'
 	else:
 		period = date_patterns[0]
 
@@ -133,6 +156,7 @@ def range_volatility(ticker, components):
 
 OPERATIONS = {
 	"last_price":last_price,
+	"?":name_exchange,
 	"-g":graph,
 	"tvol":trailing_volatility,
 	"rvol":range_volatility,
