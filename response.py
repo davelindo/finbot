@@ -1,6 +1,7 @@
 class Response: 
 
 	info = {
+		"hist": """Use `hist` with a single date to fetch price data, or with two dates to get the range of a stock's price over a period of time. Data is available from 2010 to present and is adjusted for splits. \n Format: `$<ticker> hist YYYY-MM-dd YYYY-MM-dd`""",
 		"?" : "Use `$<ticker> ?` to fetch the name and exchange for a publicly traded company.",
 		"-g" : """Format: `$<ticker> -g <period> <mavg>` \
 			\n Example: `$AAPL -g 1y 50ma 200ma` \
@@ -12,6 +13,7 @@ class Response:
 	ON_MESSAGES = [
 	"Ready!",
 	"Finbot is now ON.",
+	"Turning on...",
 	"Finbot ready.",
 	"How can I help?",
 	"What can I do for you?"
@@ -83,7 +85,7 @@ class Response:
 		return "*{}* – {} \n Open: {} \n High: {} \n Low: {} \n Close: {} \n Volume: {}".format(ticker,date,_open,high,low,close,volume)
 
 	def historical_range(ticker, start, end, high, low): 
-		return "Range for *{}* from {} to {}: *`{}-${}`*".format(ticker, start, end, low, high)
+		return "Range for *{}* from {} to {}: *`{}-{}`*".format(ticker, start, end, low, high)
 
 	def too_many_dates(ticker): 
 		return "Too many dates given for '{}'.".format(ticker)
