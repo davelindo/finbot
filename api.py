@@ -24,7 +24,7 @@ def current_date():
 	return datetime.date.today().strftime("%Y-%m-%d")
 	# "%Y-%m-%d %H:%M:%S %Z%z"
 	
-
+	
 def last_price(ticker): 
 	ticker = ticker.upper()
 	price = Share(ticker).get_price()
@@ -36,21 +36,15 @@ def last_price(ticker):
 	return Response.last_price(ticker, price, month, day, trade_time)
 
 
-
 def historical_data(ticker, components): 
-	# hist command
-	# Adjusted closing prices
-	# -r flag: find range (2 dates only) -full flag: attach full table of prices 
+	# Prices adjusted for splits
 	today, dates = current_date(), []
 	for each in components: 
 		if PATTERNS['valid_date'].match(each):
 			dates.append(each)
-	try: 
-		quotes = data.get_data_google(ticker)
-	except Exception: 
-		return {"message": Response.data_notfound(ticker)}
 	if not dates: 
 		return {"message": Response.missing_dates(ticker)}
+	# Validate dates
 	for each in dates: 
 		if each > today: 
 			return {"message": Response.invalid_date(each)}
@@ -58,6 +52,13 @@ def historical_data(ticker, components):
 			date = datetime.datetime.strptime(each, '%Y-%m-%d')
 		except ValueError: 
 			return {"message": Response.invalid_date(each)}
+	# Validate ticker and fetch data
+	try: 
+		quotes = data.get_data_google(ticker)
+	except Exception: 
+		return {"message": Response.data_notfound(ticker)}
+
+	# Return price data for one day
 	if len(dates)==1: 
 		date = dates[0]
 		try: 
@@ -67,18 +68,17 @@ def historical_data(ticker, components):
 		return {"message": Response.historical_price(
 			ticker, date, quote['Open'], quote['High'], quote['Low'], quote['Close'], int(quote['Volume']))}
 
-		
-
+	# If 2 dates are entered, returned the range during the given period
 	elif len(dates)==2: 
-		pass
-		# if
+		dates = sorted(dates)
+		start, end = dates[0], dates[1]
+		quotes = quotes.loc[start:end]
+		high = round(quotes['High'].max(),2)
+		low = round(quotes['Low'].min(),2)
+		return {"message": Response.historical_range(ticker, start, end, high, low)}
 
 	else: 
-		pass
-		# Response: Too many dates
-
-
-
+		return {"message": Response.too_many_dates(ticker)}
 
 
 def name_exchange(ticker, components): 

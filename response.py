@@ -80,7 +80,13 @@ class Response:
 		return "Enter valid dates to get historical data for {}.".format(ticker)
 
 	def historical_price(ticker, date, _open, high, low, close, volume): 
-		return "*{}*, {} \n Open: {} \n High: {} \n Low: {} \n Close: {} \n Volume: {}".format(ticker,date,_open,high,low,close,volume)
+		return "*{}* – {} \n Open: {} \n High: {} \n Low: {} \n Close: {} \n Volume: {}".format(ticker,date,_open,high,low,close,volume)
+
+	def historical_range(ticker, start, end, high, low): 
+		return "Range for *{}* from {} to {}: *`{}-${}`*".format(ticker, start, end, low, high)
+
+	def too_many_dates(ticker): 
+		return "Too many dates given for '{}'.".format(ticker)
 
 
 
