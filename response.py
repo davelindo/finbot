@@ -63,7 +63,7 @@ class Response:
 		return "No corporate actions found for {}.".format(ticker)
 
 	def list_actions(ticker): 
-		return "Corporate Actions for *{}* (Date, Type, Value):".format(ticker)
+		return "Recent corporate Actions for *{}* (Date, Type, Value):".format(ticker)
 
 
 	# Trailing Volatility

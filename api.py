@@ -82,7 +82,7 @@ def historical_data(ticker, components):
 
 
 def name_exchange(ticker, components): 
-	exchanges = {"NMS":"NASDAQ","NYQ":"NYSE"}
+	exchanges = {"NMS": "NASDAQ", "NGM": "NASDAQ", "NYQ":"NYSE"}
 	try: 
 		info = data.get_components_yahoo(ticker)
 	except Exception: 
