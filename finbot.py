@@ -17,7 +17,7 @@ FINBOT_ON = True
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
-COMMANDS = ['hist', '?', 'actions', '-g', 'tvol', 'rvol', 'PE']
+COMMANDS = ['hist', '?', 'actions', '-g', 'tvol', 'rvol', 'PE', 'rate']
 
 
 # Add ETF Holdings

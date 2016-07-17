@@ -108,6 +108,14 @@ class Response:
 		return "Price/Earnings for *{}*: *`{}`*".format(ticker, PE)
 
 
+	# Exchange Rate
+	def rate_notfound(symbol): 
+		return "No exchange rate found for '{}'.".format(symbol.upper())
+
+	def exchange_rate(symbol, rate): 
+		return "1 USD : {} {}".format(rate, symbol)
+
+
 
 
 

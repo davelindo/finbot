@@ -1,4 +1,3 @@
-import quandl as ql
 from yahoo_finance import Share, Currency
 import pandas as pd
 from pandas import np
@@ -207,6 +206,15 @@ def pe_ratio(ticker, components):
 	return {"message": Response.pe_response(ticker, PE)}
 
 
+def exchange_rate(symbol, components): 
+	rate = Currency(symbol).get_rate()
+	if not rate: 
+		return {"message":Response.no_ratefound(symbol)}
+	return {"message": Response.exchange_rate(symbol, rate)}
+
+
+
+
 
 
 
@@ -220,6 +228,7 @@ OPERATIONS = {
 	"tvol":trailing_volatility,
 	"rvol":range_volatility,
 	"PE":pe_ratio,
+	"rate":exchange_rate,
 }
 
 
