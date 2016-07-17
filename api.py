@@ -198,6 +198,16 @@ def range_volatility(ticker, components):
 	return {"message" : Response.range_vol(ticker, start, end, vol)}
 
 
+def pe_ratio(ticker, components): 
+	quote = data.get_quote_yahoo(ticker)
+	PE = quote['PE'][0]
+	if PE=='N/A':
+		return {"message": Response.pe_notfound(ticker)}
+	PE = ('%.2f' % PE)
+	return {"message": Response.pe_response(ticker, PE)}
+
+
+
 
 
 
@@ -209,6 +219,7 @@ OPERATIONS = {
 	"-g":graph,
 	"tvol":trailing_volatility,
 	"rvol":range_volatility,
+	"PE":pe_ratio,
 }
 
 

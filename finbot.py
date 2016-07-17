@@ -17,9 +17,10 @@ FINBOT_ON = True
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
-# COMMANDS = [ 'PE']
-COMMANDS = ['hist', '?', 'actions', '-g', 'tvol', 'rvol']
+COMMANDS = ['hist', '?', 'actions', '-g', 'tvol', 'rvol', 'PE']
 
+
+# Add ETF Holdings
 
 class Finbot: 
 
@@ -136,21 +137,6 @@ class Finbot:
 			return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 		message = OPERATIONS["last_price"](ticker)
 		return slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
-
-
-
-
-
-		"""
-		- Stock actions (from datareader)
-		- Fundamentals, ratios, etc
-		- ETF Holdings - if used, need to include robust tests to ensure dataframe is intact and formatted correctly to avoid 
-		unhandled errors
-			+ attach as CSV or Excel file...
-
-
-		"""
-
 
 
 
