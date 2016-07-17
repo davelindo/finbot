@@ -246,10 +246,10 @@ def get_fred(symbol, components):
 	# Return price data for one day
 	if len(dates)==1: 
 		date = dates[0]
-		try: 
-			value = df.loc[date][symbol]
-		except KeyError: 
+		ts = pd.DatetimeIndex.asof(df.index, date)
+		if pd.isnull(ts):
 			return {"message": Response.fred_date_notfound(symbol, date)}
+		value = df.loc[ts][symbol]
 		if pd.isnull(value): 
 			return {"message": Response.fred_date_notfound(symbol, date)}
 		return {"message": Response.date_fred(symbol, date, value)}
