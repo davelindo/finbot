@@ -9,7 +9,10 @@ class Response:
 			\n ```Supported time periods for graphing: 1d, 5d, 1m, 3m, 6m, 1y, 2y, 5y. The period will default to 1d if a valid value is not entered. Four moving averages are supported: 20-, 50-, 100-, and 200-day. Any combination of the four, or none at all, can be displayed at once.```""",
 		"tvol" : "`tvol` calculates annualized historical volatility using daily log returns for the given number of trailing trading days. \n Format: `$<ticker> tvol <# days>`",
 		"rvol" : "`rvol` calculates annualized historical volatility of a security using daily log returns over the time period specified. \n Format: `$<ticker> rvol YYYY-MM-dd YYYY-MM-dd`", 
-		"PE" : "Use `$<ticker> PE` to fetch the current price-earnings ratio for a security."
+		"PE" : "Use `$<ticker> PE` to fetch the current price-earnings ratio for a security.",
+		"rate": "Calculate the exchange rate of any currency (using the currency code) and the US Dollar. \nFormat: `$<currency code> rate`",
+		"fred": "Use the `fred` command to get data from the St. Louis Fed database. Use the data symbols provided by FRED (e.g. M2, GS3M, etc).\n`$<symbol> fred` will fetch the most recent value for the symbol. \
+			\n`$<symbol> fred YYYY-MM-dd` will fetch the value for the given date. \n`$<symbol> fred YYYY-MM-dd YYYY-MM-dd` will fetch the range during the given period.",
 	}
 
 	ON_MESSAGES = [
@@ -71,7 +74,7 @@ class Response:
 		return "{}-day annualized trailing volatility for *{}*: *`{}`*".format(days,ticker,vol)
 
 
-	# Range Volatility & Historical Data
+	# Range Volatility, Historical Data, FRED dates
 	def vol_required_dates(ticker): 
 		return "Enter a valid start and end date to calculate volatility for '{}'.".format(ticker)
 
@@ -96,8 +99,8 @@ class Response:
 	def historical_range(ticker, start, end, high, low): 
 		return "Range for *{}* from {} to {}: *`{}-{}`*".format(ticker, start, end, low, high)
 
-	def too_many_dates(ticker): 
-		return "Too many dates given for '{}'.".format(ticker)
+	def too_many_dates(symbol): 
+		return "Too many dates given for '{}'.".format(symbol)
 
 
 	# PE
@@ -114,6 +117,23 @@ class Response:
 
 	def exchange_rate(symbol, rate): 
 		return "1 USD : {} {}".format(rate, symbol)
+
+
+	# FRED data
+	def fred_notfound(symbol): 
+		return "Could not fetch FRED data for '{}'.".format(symbol)
+
+	def basic_fred(symbol, last_value): 
+		return "Last value for FRED {}: *`{}`*".format(symbol, last_value)
+
+	def fred_date_notfound(symbol, date): 
+		return "Could not fetch FRED data for {} on {}.".format(symbol, date)
+
+	def date_fred(symbol, date, value): 
+		return "FRED {} for {}: *`{}`*".format(symbol, date, value)
+
+	def fred_data_range(symbol, start, end, high, low): 
+		return "Range for FRED {} from {} to {}: *`{}-{}`*".format(symbol, start, end, low, high)
 
 
 

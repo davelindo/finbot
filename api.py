@@ -213,6 +213,60 @@ def exchange_rate(symbol, components):
 	return {"message": Response.exchange_rate(symbol, rate)}
 
 
+def get_fred(symbol, components): 
+	symbol = symbol.upper()
+	try: 
+		df = data.get_data_fred(symbol)
+	except Exception: 
+		return {"message":Response.fred_notfound(symbol)}
+
+	today, dates = current_date(), []
+	for each in components: 
+		if PATTERNS['valid_date'].match(each):
+			dates.append(each)
+	# No dates: get most recent value
+	if not dates: 
+		df.dropna()
+		last_value = df.tail(1)[symbol][0]
+		last_value = ('%.3f' % last_value)
+		return {"message": Response.basic_fred(symbol, last_value)}
+
+	# Clean dates
+	if len(dates)>2: 
+		return {"message": Response.too_many_dates(symbol)}
+	for each in dates: 
+		if each > today: 
+			return {"message": Response.invalid_date(each)}
+		try: 
+			date = datetime.datetime.strptime(each, '%Y-%m-%d')
+		except ValueError: 
+			return {"message": Response.invalid_date(each)}
+
+
+	# Return price data for one day
+	if len(dates)==1: 
+		date = dates[0]
+		try: 
+			value = df.loc[date][symbol]
+		except KeyError: 
+			return {"message": Response.fred_date_notfound(symbol, date)}
+		if pd.isnull(value): 
+			return {"message": Response.fred_date_notfound(symbol, date)}
+		return {"message": Response.date_fred(symbol, date, value)}
+
+	# If 2 dates are entered, returned the range during the given period
+	else: 
+		dates = sorted(dates)
+		start, end = dates[0], dates[1]
+		df = df.loc[start:end]
+		high = ('%.3f' % df[symbol].max())
+		low = ('%.3f' % df[symbol].min())
+		return {"message": Response.fred_data_range(symbol, start, end, high, low)}
+
+
+
+
+
 
 
 
@@ -229,6 +283,7 @@ OPERATIONS = {
 	"rvol":range_volatility,
 	"PE":pe_ratio,
 	"rate":exchange_rate,
+	"fred":get_fred,
 }
 
 
