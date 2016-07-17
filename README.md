@@ -1,18 +1,18 @@
 ## finbot
 
-[![screenshot](/screenshots/finbot1.png?raw=true "finbot 1")]
-[![screenshot](/screenshots/finbot2.png?raw=true "finbot 2")]
+![screenshot](/screenshots/finbot1.png?raw=true "finbot 1")
+![screenshot](/screenshots/finbot2.png?raw=true "finbot 2")
 
 #### What it is
 Basic finance bot for Slack. 
 
 #### How it works
 Queries to be executed are denoted with '$'. The bot parses up to 5 queries per message and returns the requested information for each.
-[![screenshot](/screenshots/finbot3.png?raw=true "finbot 3")]
+![screenshot](/screenshots/finbot3.png?raw=true "finbot 3")
 
 Finbot won't respond to a message that doesn't begin with a valid query, but it can be turned on and off if you want it to ignore messages.
 The user can also tag finbot and ask for help with using a certain operation. 
-[![screenshot](/screenshots/finbot4.png?raw=true "finbot 4")]
+![screenshot](/screenshots/finbot4.png?raw=true "finbot 4")
 
 
 #### Current Functionality
