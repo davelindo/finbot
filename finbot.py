@@ -7,7 +7,7 @@ from api import OPERATIONS
 from response import Response
 
 # Bot ID from environment variable
-BOT_ID = os.environ.get("BOT_ID")
+BOT_ID = "finbot"
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -15,7 +15,7 @@ AT_BOT_2 = "<@" + BOT_ID + ">:"
 FINBOT_ON = True
 
 # instantiate Slack client
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
+slack_client = SlackClient('YOUR_TOKEN_HERE')
 
 COMMANDS = ['hist', '?', 'actions', '-g', 'tvol', 'rvol', 'PE', 'rate', 'fred']
 
@@ -75,15 +75,18 @@ class Finbot:
 		if raw_text.startswith('$'):
 			queries = raw_text.split('$')
 			queries.remove('')
-			for each in queries: 
+			if not queries[0].split(' ')[0].isalpha():
+				return None
+			for each in queries:
 				each.strip()
 				each.lstrip('$')
 		elif raw_text.startswith(AT_BOT) or raw_text.startswith(AT_BOT_2):
 			Finbot.bot_info(raw_text.split()[1:], channel)
 			return None
+		elif '$' in raw_text:
+			queries = re.findall(r"\$(\w+)", raw_text)
 		else: 
 			return None
-
 		if len(queries) > 5: 
 			warning = random.choice(Response.TOO_MANY_REQUESTS)
 			slack_client.api_call("chat.postMessage", channel=channel, text=warning, as_user=True)

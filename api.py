@@ -141,7 +141,7 @@ def graph(ticker, components):
 			url+=each	
 
 	# Build Attachment
-	fallback = "Graph for {} – {}".format(ticker, url)
+	fallback = "Graph for {} - {}".format(ticker, url)
 	title = "{} - {}".format(ticker, period)
 	text = ""
 	footer = "Retrieved from Yahoo! Finance"
